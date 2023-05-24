@@ -19,10 +19,10 @@ X_full = X_full.dropna( how='any', subset=['away_score','home_score','total','re
 #current_week = 5
 X_full = X_full[X_full['game_type'] == "REG"] 
 #X_full = X_full[ ((X_full['season'] == 2022) & (X_full['week'] <= current_week)) | X_full['season'] < 2022 ]
-X_full = X_full[X_full['season'] < 2009]
+X_full = X_full[X_full['season'] < 2019]
 # Separate out Testing Data
 #X_test_full = X_test_full[(X_test_full['season'] >= 2022) & (X_test_full['week'] > current_week) & (X_test_full['game_type'] == "REG")] 
-X_test_full = X_test_full[(X_test_full['season'] >= 2009) & (X_test_full['game_type'] == "REG")]
+X_test_full = X_test_full[(X_test_full['season'] >= 2019) & (X_test_full['game_type'] == "REG")]
 y_test = X_test_full.result 
 
 # separate target from predictors
@@ -31,6 +31,21 @@ X_full.drop(['result'], axis=1, inplace=True) # this is target
 X_full.drop(['away_score'], axis=1, inplace=True) # these are directlly related to target
 X_full.drop(['home_score'], axis=1, inplace=True)
 X_full.drop(['total'], axis=1, inplace=True) 
+
+# Remove redundant or not useful features, mostly IDs
+X_full.drop(['game_id'], axis=1, inplace=True) 
+X_full.drop(['old_game_id'], axis=1, inplace=True) 
+X_full.drop(['pff'], axis=1, inplace=True) 
+X_full.drop(['gsis'], axis=1, inplace=True) 
+X_full.drop(['pfr'], axis=1, inplace=True) 
+X_full.drop(['espn'], axis=1, inplace=True) 
+X_full.drop(['stadium_id'], axis=1, inplace=True) # already have the name
+X_full.drop(['away_qb_id'], axis=1, inplace=True) # already have their name
+X_full.drop(['home_qb_id'], axis=1, inplace=True) 
+X_full.drop(['nfl_detail_id'], axis=1, inplace=True)
+
+# Remove features Breaking the Model?
+X_full.drop(['wind'], axis=1, inplace=True) # second most important feature!?
 
 # Break off validation set from training data
 X_train_full, X_valid_full, y_train, y_valid = train_test_split(X_full, y, train_size=0.7, test_size=0.3, random_state=0)
