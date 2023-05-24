@@ -1,5 +1,8 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from xgboost import XGBRegressor
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
 
 # Read in public NFL dataset
 X_full = pd.read_csv("http://www.habitatring.com/games.csv") 
@@ -58,3 +61,12 @@ print('Number of Test Examples = {}\n'.format(X_test.shape[0]))
 
 print(my_cols)
 print("\n")
+
+# Define the model
+model = XGBRegressor(n_estimators=100, learning_rate=0.025,  early_stopping_rounds=4, max_depth=3, subsample=0.85) 
+# Fit the model
+model.fit(X_train, y_train, eval_set=[(X_valid, y_valid)], verbose=False)
+# Get predictions
+preds = model.predict(X_valid)
+print('MAE:', mean_absolute_error(y_valid, preds))
+print('MSE:', mean_squared_error(y_valid, preds))
