@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
+from matplotlib import pyplot as plt
 
 # Read in public NFL dataset
 X_full = pd.read_csv("http://www.habitatring.com/games.csv") 
@@ -12,6 +13,7 @@ X_test_full = pd.read_csv("http://www.habitatring.com/games.csv")
 X_full = X_full.dropna( how='any', subset=['away_score','home_score','total','result'])
 
 # Separate out Training/Validation data
+# Consider all games in data set prior to current week
 current_week = 5
 X_full = X_full[X_full['game_type'] == "REG"] 
 X_full = X_full[ ((X_full['season'] == 2022) & (X_full['week'] <= current_week)) | X_full['season'] < 2022 ]
@@ -45,6 +47,11 @@ X_train = X_train_full[my_cols].copy()
 X_valid = X_valid_full[my_cols].copy()
 X_test = X_test_full[my_cols].copy()
 
+# Save copies of the data before one-hot encoding, for showing results later on
+X_train_OG = X_train
+X_valid_OG = X_valid
+X_test_OG = X_test
+
 # One-hot encode the data (to shorten the code, we use pandas)
 X_train = pd.get_dummies(X_train)
 X_valid = pd.get_dummies(X_valid)
@@ -70,3 +77,18 @@ model.fit(X_train, y_train, eval_set=[(X_valid, y_valid)], verbose=False)
 preds = model.predict(X_valid)
 print('MAE:', mean_absolute_error(y_valid, preds))
 print('MSE:', mean_squared_error(y_valid, preds))
+
+# Predict Test Data
+df_total = pd.concat([y_test, X_test_OG], axis=1)
+df_total["Pred"] = model.predict(X_test)
+df_total.Pred = df_total.Pred.round()
+
+df_total = df_total[ ['Pred'] + [ col for col in df_total.columns if col != 'Pred' ] ]
+df_total.to_csv('boosted_prediction.csv')
+
+# plot prediction vs actual 
+df_total["Game"] = df_total.index
+df_total["Model-Real"] = df_total["Pred"] - df_total["result"]
+plot = df_total.plot(x="Game",y="Model-Real")
+fig = plot.get_figure()
+fig.savefig("boosted_output2.png")
