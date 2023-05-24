@@ -4,6 +4,8 @@ from xgboost import XGBRegressor
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
 from matplotlib import pyplot as plt
+import seaborn as sns
+from xgboost import plot_importance
 
 # Read in public NFL dataset
 X_full = pd.read_csv("http://www.habitatring.com/games.csv") 
@@ -14,12 +16,13 @@ X_full = X_full.dropna( how='any', subset=['away_score','home_score','total','re
 
 # Separate out Training/Validation data
 # Consider all games in data set prior to current week
-current_week = 5
+#current_week = 5
 X_full = X_full[X_full['game_type'] == "REG"] 
-X_full = X_full[ ((X_full['season'] == 2022) & (X_full['week'] <= current_week)) | X_full['season'] < 2022 ]
-
+#X_full = X_full[ ((X_full['season'] == 2022) & (X_full['week'] <= current_week)) | X_full['season'] < 2022 ]
+X_full = X_full[X_full['season'] < 2009]
 # Separate out Testing Data
-X_test_full = X_test_full[(X_test_full['season'] >= 2022) & (X_test_full['week'] > current_week) & (X_test_full['game_type'] == "REG")] 
+#X_test_full = X_test_full[(X_test_full['season'] >= 2022) & (X_test_full['week'] > current_week) & (X_test_full['game_type'] == "REG")] 
+X_test_full = X_test_full[(X_test_full['season'] >= 2009) & (X_test_full['game_type'] == "REG")]
 y_test = X_test_full.result 
 
 # separate target from predictors
@@ -92,3 +95,12 @@ df_total["Model-Real"] = df_total["Pred"] - df_total["result"]
 plot = df_total.plot(x="Game",y="Model-Real")
 fig = plot.get_figure()
 fig.savefig("boosted_output2.png")
+
+# See how features relate to themselves and the target
+g = sns.pairplot(df_total, vars=["div_game","result","Model-Real","season"], hue = "overtime")
+g.fig.savefig("seaborn.png")
+# Investigate Feature Importance
+g = plot_importance(model)
+fig = g.get_figure()
+fig.savefig("feat_import.png")
+plt.show()
